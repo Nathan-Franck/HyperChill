@@ -2,15 +2,9 @@
 #include <vector>
 
 #include <glad/glad.h>
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 
 #include "linmath.h"
-
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GLFW_TRUE);
-}
 class ShaderProgram {
 public:
 	const GLuint program;
@@ -24,17 +18,17 @@ public:
 		vertex_shader{ glCreateShader(GL_VERTEX_SHADER) },
 		fragment_shader{ glCreateShader(GL_FRAGMENT_SHADER) }
 	{
-		glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
+		glShaderSource(vertex_shader, 1, &vertex_shader_source, nullptr);
 		glCompileShader(vertex_shader);
 
-		glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
+		glShaderSource(fragment_shader, 1, &fragment_shader_source, nullptr);
 		glCompileShader(fragment_shader);
 
 		glAttachShader(program, vertex_shader);
 		glAttachShader(program, fragment_shader);
 		glLinkProgram(program);
 	}
-	explicit operator GLuint()
+	explicit operator GLuint() const
 	{
 		return program;
 	}
@@ -63,7 +57,7 @@ public:
 
 		glEnableVertexAttribArray(vpos_location);
 		glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE,
-			sizeof(vertices[0]), (void*)0);
+			sizeof(vertices[0]), (void*)nullptr);
 		glEnableVertexAttribArray(vcol_location);
 		glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
 			sizeof(vertices[0]), (void*)(sizeof(float) * 2));
@@ -72,18 +66,22 @@ public:
 
 int main()
 {
+	std::cout << "Hello Worldlings!" << std::endl;
 	if (!glfwInit())
 	{
 		// Initialization failed
 	}
-	const auto window = glfwCreateWindow(640, 480, "HyperChill", NULL, NULL);
+	const auto window = glfwCreateWindow(640, 480, "HyperChill", nullptr, nullptr);
 	if (!window)
 	{
 		// Window or OpenGL context creation failed
 	}
 	glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-	glfwSetKeyCallback(window, key_callback);
+	glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+    });
 
 	glfwSwapInterval(1);
 
@@ -130,7 +128,7 @@ int main()
 		mat4x4 m, p, mvp;
 
 		glfwGetFramebufferSize(window, &width, &height);
-		ratio = width / (float)height;
+		ratio = (float)width / (float)height;
 
 		glViewport(0, 0, width, height);
 		glClear(GL_COLOR_BUFFER_BIT);
