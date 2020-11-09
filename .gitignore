@@ -1,7 +1,6 @@
 # Specify filepatterns you want git to ignore.
 
 .idea
-.vscode
 .vs
 cmake-build-debug
 build
