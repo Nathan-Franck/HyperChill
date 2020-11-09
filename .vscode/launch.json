@@ -2,10 +2,21 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(Windows) Launch",
+            "name": "🎮 Run Game",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/Debug/HyperChill.exe",
+            "program": "${workspaceFolder}/build/Debug/HyperChillGame.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false
+        },
+        {
+            "name": "⚙ Run Editor",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/HyperChillEditor.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
