@@ -1,0 +1,14 @@
+#pragma once
+
+/**
+ * The idea here ----
+ * Have a new file format with an expected const data structure that can be both read directly into cpp and has proper annotating and type checking for coding,
+ * But also have it editable in a custom editor .exe file that can find the file and display it in a custom view
+ * This way we can have custom tree editors, world editors, all working with different live data that can be serialized back into type-safe headers
+ * And pushed back onto git, shared with others no problem.
+ */
+
+
+void some_data_to_use() {
+    std::cout << "hey there" << std:: endl;
+}

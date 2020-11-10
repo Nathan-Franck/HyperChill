@@ -4,7 +4,9 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "world.hyper"
 #include "linmath.h"
+
 class ShaderProgram {
 public:
 	const GLuint program;
@@ -66,6 +68,8 @@ public:
 
 int main()
 {
+	some_data_to_use();
+
 	std::cout << "Hello Worldlings!" << std::endl;
 	if (!glfwInit())
 	{
