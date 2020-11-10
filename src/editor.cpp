@@ -1,11 +1,14 @@
 #include <iostream>
 #include <vector>
+#include <sstream>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include "world.hyper"
 #include "linmath.h"
+
+using namespace std;
 
 class ShaderProgram {
 public:
@@ -47,7 +50,7 @@ public:
 	const GLint mvp_location;
 	const GLint vpos_location;
 	const GLint vcol_location;
-	ShaderData(ShaderProgram program, std::vector<Structure> vertices) :
+	ShaderData(ShaderProgram program, vector<Structure> vertices) :
 		mvp_location{ glGetUniformLocation((GLuint)program, "MVP") },
 		vpos_location{ glGetAttribLocation((GLuint)program, "vPos") },
 		vcol_location{ glGetAttribLocation((GLuint)program, "vCol") }
@@ -66,11 +69,128 @@ public:
 	}
 };
 
+// ShaderBuilder?
+
+enum class GLSLUnit {
+	single,
+	vec2,
+	vec3,
+	vec4,
+};
+enum class GLSLUniformUnit {
+	single,
+	vec2,
+	vec3,
+	vec4,
+	sampler2D,
+};
+
+using ShaderStream = ostringstream;
+
+
+#define SHADER_MEMBER(n) \
+	template<GLSLUnit T>\
+	class member_##n {\
+	public:\
+		void to_vert_text(ShaderStream& stream);\
+	};\
+	template <> void member_##n<GLSLUnit::single>::to_vert_text (ShaderStream& stream) {\
+		stream << "varying highp float " #n << endl;\
+	}\
+	template <> void member_##n<GLSLUnit::vec2>::to_vert_text (ShaderStream& stream) {\
+		stream << "varying highp vec2 " #n << endl;\
+	}\
+	template <> void member_##n<GLSLUnit::vec3>::to_vert_text (ShaderStream& stream) {\
+		stream << "varying highp vec3 " #n << endl;\
+	}\
+	template <> void member_##n<GLSLUnit::vec4>::to_vert_text (ShaderStream& stream) {\
+		stream << "varying highp vec4 " #n << endl;\
+	}
+// end SHADER_MEMBER
+
+SHADER_MEMBER(NOICE);
+
+// Alternative shader member defs?
+
+
+template<GLSLUnit T> void why_no_work(ShaderStream& stream, const string shader_name);
+template <> void why_no_work<GLSLUnit::single>(ShaderStream& stream, const string shader_name) {
+	stream << "varying highp float " << shader_name << endl;
+}
+template <> void why_no_work<GLSLUnit::vec2>(ShaderStream& stream, const string shader_name) {
+	stream << "varying highp vec2 " << shader_name << endl;
+}
+template <> void why_no_work<GLSLUnit::vec3>(ShaderStream& stream, const string shader_name) {
+	stream << "varying highp vec3 " << shader_name << endl;
+}
+template <> void why_no_work<GLSLUnit::vec4>(ShaderStream& stream, const string shader_name) {
+	stream << "varying highp vec4 " << shader_name << endl;
+}
+
+template<class T, GLSLUnit U>
+class ShaderMember {
+public:
+	void to_vert_text(ShaderStream& stream) {
+		why_no_work<U>(stream, ((string)typeid(T).name()).substr(size("class")));
+	}
+};
+
+template<class T>
+class Typed
+{
+private:
+	T _val;
+public:
+	Typed(T val) : _val { val } { }
+};
+
+class NamedMemberExample : public Typed<int> {};
+
+const auto hey = NamedMemberExample { 0 };
+
+class Positions : public ShaderMember<Positions, GLSLUnit::vec2> { };
+
+// Shader defs?
+template<typename T>
+struct ShaderInput {
+	T input_type;
+};
+
+template<typename T>
+struct ShaderOutput {
+	T output_type;
+};
+
+// Tupler! Important for having a structure of arbitrary numbers of members
+
+template<typename T>
+tuple<T> tupler(T v) {
+  return make_tuple(v);
+}
+
+template<typename T, typename... Args>
+tuple<T, Args...> tupler(T first, Args... args) {
+  return tuple_cat(tupler(first), tupler(args...));
+}
+
+// Test!
+
 int main()
 {
-	some_data_to_use();
+	cout << "Hello Worldlings!" << endl;
+	const auto thingie { tuple_cat(make_tuple(1), make_tuple(2)) };
+	const auto thinger = tuple_cat(make_tuple(0), thingie);
+	const auto thingerino = tupler(1, 2, 3);
+	cout << get<1>(thingerino) << endl;
 
-	std::cout << "Hello Worldlings!" << std::endl;
+	ostringstream streamer;
+	member_NOICE<GLSLUnit::vec2>{}.to_vert_text(streamer);
+	member_NOICE<GLSLUnit::vec2>{}.to_vert_text(streamer);
+	auto membie = Positions{};
+	membie.to_vert_text(streamer);
+
+	cout << streamer.str() << endl;
+
 	if (!glfwInit())
 	{
 		// Initialization failed
@@ -116,6 +236,7 @@ int main()
 
 		)glsl",
 	};
+
 	auto data = ShaderData{
 		program,
 		{
@@ -151,7 +272,7 @@ int main()
 	}
 	glfwDestroyWindow(window);
 	glfwTerminate();
-	std::cout << "Complete!" << std::endl;
+	cout << "Complete!" << endl;
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
@@ -164,3 +285,4 @@ int main()
 //   4. Use the Error List window to view errors
 //   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
 //   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
+

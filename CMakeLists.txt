@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.17)
 project(HyperChill)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 add_executable(HyperChillGame "src/main.cpp")
 add_executable(HyperChillEditor "src/editor.cpp")

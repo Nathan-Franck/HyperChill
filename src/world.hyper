@@ -8,7 +8,14 @@
  * And pushed back onto git, shared with others no problem.
  */
 
+namespace World
+{
 
-void some_data_to_use() {
-    std::cout << "hey there" << std:: endl;
+    struct Structure
+    {
+        float x, y;
+    };
+
+    static const std::vector<Structure> data {{0.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f}};
+
 }
