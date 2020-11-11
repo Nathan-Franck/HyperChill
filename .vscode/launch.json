@@ -13,6 +13,17 @@
             "externalConsole": false
         },
         {
+            "name": "🧪 Run ReactiveTester",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/ReactiveTester.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false
+        },
+        {
             "name": "⚙ Run Editor",
             "type": "cppvsdbg",
             "request": "launch",

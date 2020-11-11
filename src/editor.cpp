@@ -138,10 +138,9 @@ public:
 template<class T>
 class Typed
 {
-private:
-	T _val;
 public:
-	Typed(T val) : _val { val } { }
+	const T value;
+	Typed(T val) : value { val } { }
 };
 
 class NamedMemberExample : public Typed<int> {};
@@ -173,15 +172,33 @@ tuple<T, Args...> tupler(T first, Args... args) {
   return tuple_cat(tupler(first), tupler(args...));
 }
 
+// Tupler transformation example
+
+template<typename T>
+tuple<T> unwrap(Typed<T> v) {
+  return make_tuple(v.value);
+}
+
+template<typename T, typename... Args>
+tuple<T, Args...> unwrap(Typed<T> first, Typed<Args>... args) {
+  return tuple_cat(unwrap(first), unwrap(args...));
+}
+
 // Test!
 
 int main()
 {
+
+
 	cout << "Hello Worldlings!" << endl;
 	const auto thingie { tuple_cat(make_tuple(1), make_tuple(2)) };
 	const auto thinger = tuple_cat(make_tuple(0), thingie);
 	const auto thingerino = tupler(1, 2, 3);
 	cout << get<1>(thingerino) << endl;
+
+	const auto funcie = [](auto first, auto second) { return first + second; };
+	// const auto resulter = std::apply(funcie, make_tuple(1, 2));
+	// const auto unwrapped = std::apply(unwrap, make_tuple(Typed<int>{ 1 }));
 
 	ostringstream streamer;
 	member_NOICE<GLSLUnit::vec2>{}.to_vert_text(streamer);

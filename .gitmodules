@@ -5,3 +5,6 @@
 	path = deps/glfw
 	url = https://github.com/glfw/glfw.git
 	branch = master
+[submodule "deps/RxCpp"]
+	path = deps/RxCpp
+	url = https://github.com/ReactiveX/RxCpp.git
