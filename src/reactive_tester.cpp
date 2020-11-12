@@ -5,7 +5,7 @@
 #include <rxcpp/rx.hpp>
 #include <random>
 #include <regex>
-#include "linmath.h"
+#include <glm/vec2.hpp>
 
 namespace Rx {
     using namespace rxcpp;
@@ -22,10 +22,10 @@ namespace Std {
 
 class Enemy {
     public:
-        const Rx::subject<vec2> position {};
+        const rxcpp::subjects::detail::behavior_observer<glm::vec2> position;
 
-        Enemy() {
-            //position.get_observable().
+        Enemy(glm::vec2 starting_position) :
+                position(starting_position, { }) {
         }
 };
 
@@ -106,7 +106,6 @@ int main() {
     // print result
     lines |
         Rx::subscribe<Std::string>(Rx::println(Std::cout));
-
 
     Std::cout <<("Hey I'm done!") << Std::endl;
     return 0;

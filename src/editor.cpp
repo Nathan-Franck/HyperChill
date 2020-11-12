@@ -6,7 +6,7 @@
 #include <GLFW/glfw3.h>
 
 #include "world.hyper"
-#include "linmath.h"
+#include "nicemath.h"
 
 using namespace std;
 

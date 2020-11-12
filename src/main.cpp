@@ -1,10 +1,15 @@
 #include <iostream>
+#include <utility>
 #include <vector>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/type_ptr.inl>
 
-#include "linmath.h"
 class ShaderProgram {
 public:
 	const GLuint program;
@@ -20,53 +25,133 @@ public:
 	{
 		glShaderSource(vertex_shader, 1, &vertex_shader_source, nullptr);
 		glCompileShader(vertex_shader);
+		
+		GLint compileResult;
+		glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &compileResult);
+		if(compileResult != GL_TRUE) {
+            GLsizei logLength;
+            GLchar  log[1024];
+            glGetShaderInfoLog(vertex_shader, sizeof(log), &logLength, log);
+            std::cerr << "vertex_shader: " << std::endl << log << std::endl;
+		}
 
 		glShaderSource(fragment_shader, 1, &fragment_shader_source, nullptr);
 		glCompileShader(fragment_shader);
+		
+		glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &compileResult);
+		if(compileResult != GL_TRUE) {
+            GLsizei logLength;
+            GLchar  log[1024];
+            glGetShaderInfoLog(fragment_shader, sizeof(log), &logLength, log);
+            std::cerr << "fragment_shader: " << std::endl << log << std::endl;
+		}
 
 		glAttachShader(program, vertex_shader);
 		glAttachShader(program, fragment_shader);
 		glLinkProgram(program);
+
+        glGetProgramiv(program, GL_LINK_STATUS, &compileResult);
+        if(compileResult != GL_TRUE)
+        {
+            std::cerr << "Shader compilation of file '" << "foof" << "' failed." << std::endl;
+
+            GLsizei logLength;
+            GLchar  log[1024];
+            glGetProgramInfoLog(program, sizeof(log), &logLength, log);
+            std::cerr << "program: " << std::endl << log << std::endl;
+        }
 	}
 	explicit operator GLuint() const
 	{
 		return program;
 	}
+    template<class T>
+    void assign_buffer_from_vector(const std::string& name, std::vector<T> input) {
+        const GLint location = glGetAttribLocation((GLuint)program, (GLchar*)name.data());
+        GLuint vertex_buffer;
+        glGenBuffers(1, &vertex_buffer);
+        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+        glBufferData(GL_ARRAY_BUFFER, input.size() * sizeof(T), &input[0], GL_STATIC_DRAW);
+        glEnableVertexAttribArray(location);
+        glVertexAttribPointer(location, std::tuple_size<T>::value, GL_FLOAT, GL_FALSE,
+                              sizeof(input[0]), (void*)nullptr);
+        std::cout << location << std::endl;
+    }
 };
 
-class ShaderData {
-private:
+template<class T>
+class Uniform {
 public:
-	struct Structure
-	{
-		float x, y;
-		float r, g, b;
-	};
-	const GLint mvp_location;
-	const GLint vpos_location;
-	const GLint vcol_location;
-	ShaderData(ShaderProgram program, std::vector<Structure> vertices) :
-		mvp_location{ glGetUniformLocation((GLuint)program, "MVP") },
-		vpos_location{ glGetAttribLocation((GLuint)program, "vPos") },
-		vcol_location{ glGetAttribLocation((GLuint)program, "vCol") }
-	{
-		GLuint vertex_buffer;
-		glGenBuffers(1, &vertex_buffer);
-		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Structure), &vertices[0], GL_STATIC_DRAW);
+    const GLint location;
+    Uniform(ShaderProgram& program, std::string name) :
+        location{glGetUniformLocation((GLuint)program, name.data()) }
+        { }
+    void assign(T value) const {
+        static_assert(sizeof(T) == 0, "Only specializations of assign can be used");
+    }
+};
+template<>
+void Uniform<glm::mat4>::assign(glm::mat4 value) const {
+    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
+}
+template<>
+void Uniform<glm::vec3>::assign(glm::vec3 value) const {
+    glUniform3fv(location, 1, glm::value_ptr(value));
+}
+template<>
+void Uniform<glm::vec4>::assign(glm::vec4 value) const {
+    glUniform4fv(location, 1, glm::value_ptr(value));
+}
 
-		glEnableVertexAttribArray(vpos_location);
-		glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE,
-			sizeof(vertices[0]), (void*)nullptr);
-		glEnableVertexAttribArray(vcol_location);
-		glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
-			sizeof(vertices[0]), (void*)(sizeof(float) * 2));
-	}
+class FunShader : public ShaderProgram {
+public:
+
+    using Position = std::tuple<float, float>;
+    using Color = std::tuple<float, float, float>;
+    const Uniform<glm::mat4> model_view_projection;
+    const Uniform<glm::vec4> extra_data;
+
+    explicit FunShader(std::vector<Position> vertex_positions, std::vector<Color> vertex_colors) :
+        ShaderProgram{
+            R"glsl(#version 110
+
+                uniform mat4 model_view_projection;
+                uniform vec4 extra_data;
+                attribute vec3 vert_color;
+                attribute vec2 vert_position;
+                varying vec3 frag_color;
+
+                void main()
+                {
+                    gl_Position = model_view_projection * vec4(vert_position, 0.0, 1.0);
+                    frag_color = vert_color * (sin(extra_data.x * 10.0) + 1.0);
+                }
+
+            )glsl",
+            R"glsl(#version 110
+
+                varying vec3 frag_color;
+
+                void main()
+                {
+                    gl_FragColor = vec4(frag_color, 1.0);
+                }
+
+        )glsl",
+    },
+    model_view_projection{ *this, "model_view_projection" },
+    extra_data{ *this, "extra_data" }
+    {
+        assign_buffer_from_vector("vert_color", std::move(vertex_colors));
+        assign_buffer_from_vector("vert_position", std::move(vertex_positions));
+    }
 };
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "EndlessLoop"
 int main()
 {
-	std::cout << "Hello Worldlings!" << std::endl;
+	std::cout << "Hey ho! my Worldlings!" << std::endl;
 	if (!glfwInit())
 	{
 		// Initialization failed
@@ -85,47 +170,23 @@ int main()
 
 	glfwSwapInterval(1);
 
-	auto program = ShaderProgram{
-		R"glsl(#version 110
-
-			uniform mat4 MVP;
-			attribute vec3 vCol;
-			attribute vec2 vPos;
-			varying vec3 color;
-
-			void main()
-			{
-				gl_Position = MVP * vec4(vPos, 0.0, 1.0);
-				color = vCol;
-			}
-
-		)glsl",
-
-		R"glsl(#version 110
-
-			varying vec3 color;
-
-			void main()
-			{
-				gl_FragColor = vec4(color, 1.0);
-			}
-
-		)glsl",
-	};
-	auto data = ShaderData{
-		program,
+	auto fun_shader = FunShader{
 		{
-			{ -0.6f, -0.4f, 1.f, 0.f, 0.f },
-			{  0.6f, -0.4f, 0.f, 1.f, 0.f },
-			{   0.f,  0.6f, 0.f, 0.f, 1.f }
-		}
+			{ -0.6f, -0.4f },
+			{  0.6f, -0.4f },
+			{   0.f,  0.6f },
+		},
+        {
+            {1.f, 1.f, 0.f},
+            {0.f, 1.f, 1.f},
+            {1.f, 0.f, 1.f},
+        }
 	};
 
 	while (!glfwWindowShouldClose(window))
 	{
 		float ratio;
 		int width, height;
-		mat4x4 m, p, mvp;
 
 		glfwGetFramebufferSize(window, &width, &height);
 		ratio = (float)width / (float)height;
@@ -133,13 +194,13 @@ int main()
 		glViewport(0, 0, width, height);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		mat4x4_identity(m);
-		mat4x4_rotate_Z(m, m, (float)glfwGetTime());
-		mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-		mat4x4_mul(mvp, p, m);
-
-		glUseProgram((GLuint)program);
-		glUniformMatrix4fv(data.mvp_location, 1, GL_FALSE, (const GLfloat*)mvp);
+        glm::quat rotation = glm::angleAxis((float)glfwGetTime(), glm::vec3{0.0f, 0.0f, 1.0f});
+        auto object = glm::toMat4(rotation);
+        auto perspective = glm::ortho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
+		auto model_view_projection = perspective * object;
+		glUseProgram(fun_shader.program);
+		fun_shader.model_view_projection.assign(model_view_projection);
+        fun_shader.extra_data.assign(glm::vec4((float)glfwGetTime(), (float)glfwGetTime(), (float)glfwGetTime(), 0));
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glfwSwapBuffers(window);
@@ -149,6 +210,7 @@ int main()
 	glfwTerminate();
 	std::cout << "Complete!" << std::endl;
 }
+#pragma clang diagnostic pop
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
 // Debug program: F5 or Debug > Start Debugging menu
