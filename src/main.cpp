@@ -147,8 +147,6 @@ public:
     }
 };
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "EndlessLoop"
 int main()
 {
 	std::cout << "Hey ho! my Worldlings!" << std::endl;
@@ -210,7 +208,6 @@ int main()
 	glfwTerminate();
 	std::cout << "Complete!" << std::endl;
 }
-#pragma clang diagnostic pop
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
 // Debug program: F5 or Debug > Start Debugging menu

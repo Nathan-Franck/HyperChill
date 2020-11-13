@@ -15,13 +15,17 @@ find_package(glm CONFIG REQUIRED)
 
 add_executable(HyperChillGame "src/main.cpp")
 add_executable(ReactiveTester "src/reactive_tester.cpp")
+add_executable(EntityTester "src/entity.cpp")
 
 target_link_libraries(HyperChillGame glad::glad)
 target_link_libraries(HyperChillGame OpenGL::GL)
 target_link_libraries(HyperChillGame glfw)
 target_link_libraries(HyperChillGame glm)
+
 target_link_libraries(ReactiveTester glad::glad)
 target_link_libraries(ReactiveTester OpenGL::GL)
 target_link_libraries(ReactiveTester glfw)
 target_link_libraries(ReactiveTester rxcpp)
 target_link_libraries(ReactiveTester glm)
+
+target_link_libraries(EntityTester glm)
