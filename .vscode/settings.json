@@ -18,6 +18,6 @@
         "utility": "cpp"
     },
     "cmake.configureSettings": {
-        "CMAKE_TOOLCHAIN_FILE": "D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_TOOLCHAIN_FILE": "./vcpkg.cmake",
     }
 }
