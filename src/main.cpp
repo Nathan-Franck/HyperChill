@@ -271,7 +271,28 @@ namespace ShaderBuilder {
         void set_binding(Bind<Member> bind) {
             std::cout << bind.write;
         }
+
+        void to_vert_text() {
+            std::apply([](auto&... args){
+                ((vert_text(cout, args, get_class_name(args))), ...);
+            }, components);
+        }
     };
+
+    // 👨‍🔬
+    void test() {
+        class vert_color : public Attribute<GLSLUnit::vec3, false> {};
+        class vert_position : public Attribute<GLSLUnit::vec2, false> {};
+        class model_view_projection : public Uniform<GLSLUniformUnit::mat4, 1> {};
+
+        auto shader = Shader{vert_color{}, vert_position{}, model_view_projection()};
+        shader.to_vert_text();
+        // 📝 Get all the names from the classes....
+
+        const auto what = { 1, 2, 3 };
+        // vert_text(std::cout, model_view_projection{}); //, 1, model_view_projection
+        //shader.render(Bind{shader.get<model_view_projection>(), vec3{}});
+    }
 
     // 🔍 Output state of tuple
     template<typename... Ts>
@@ -288,31 +309,6 @@ namespace ShaderBuilder {
             }, theTuple
         );
         return os;
-    }
-
-
-    // template<class First, class... Rest>
-    // void binds() {
-
-    // }
-
-    // 👨‍🔬
-    void test() {
-        class vert_color : public Attribute<GLSLUnit::vec3, false> {};
-        class vert_position : public Attribute<GLSLUnit::vec2, false> {};
-        class model_view_projection : public Uniform<GLSLUniformUnit::mat4, 1> {};
-
-        const auto shader = Shader{vert_color{}, vert_position{}, model_view_projection()}; //vert_color(), vert_position(), 
-        // cout << shader.components << endl;
-        // 📝 Get all the names from the classes....
-        std::apply([](auto&... args){
-            ((vert_text(cout, args, get_class_name(args))), ...);
-        }, shader.components);
-        cout << endl;
-
-        const auto what = { 1, 2, 3 };
-        // vert_text(std::cout, model_view_projection{}); //, 1, model_view_projection
-        //shader.render(Bind{shader.get<model_view_projection>(), vec3{}});
     }
 
 }
