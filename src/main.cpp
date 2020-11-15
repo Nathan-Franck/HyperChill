@@ -149,25 +149,185 @@ public:
     }
 };
 
+/** 😎 Objectives:
+ * Take shader settings
+ * Use to create shader
+ * Use to create render command
+ */
+namespace ShaderBuilder {
+
+    using namespace std;
+    using namespace hyp;
+    using namespace glm;
+
+    struct Color : SimpleComponent<vec3>{};
+
+    enum class GLSLUnit {
+        single,
+        vec2,
+        vec3,
+        vec4,
+    };
+    enum class GLSLUniformUnit {
+        single,
+        vec2,
+        vec3,
+        vec4,
+        mat4,
+        sampler2D,
+    };
+
+    template<GLSLUnit unit>
+    class Varying {};
+
+    template<GLSLUnit unit, bool instanced>
+    class Attribute {};
+
+    class Element {};
+
+    template<GLSLUniformUnit unit, int count>
+    class Uniform {
+
+    };
+
+    template<class T>
+    class Bind {
+
+    };
+
+    // ⚠ MSVC specific class name gathering solution
+    template<class T>
+    string get_class_name(T member) {
+        string base_name = typeid(member).name();
+        int last_space = std::max(
+            base_name.find_last_of("::") + 1,
+            base_name.find_last_of(" "));
+        return base_name.substr(last_space);
+    }
+
+    template<class... T>
+    auto get_class_names(T... classes) {
+        return list{get_class_name(classes)...};
+    }
+
+    template<GLSLUnit unit, bool instanced>
+    void vert_text(ostream& stream, Attribute<unit, instanced> member, string name) {
+        stream << "attribute ";
+        switch (unit) {
+            case GLSLUniformUnit::single: stream << "single "; break;
+            case GLSLUniformUnit::vec2: stream << "vec2 "; break;
+            case GLSLUniformUnit::vec3: stream << "vec3 "; break;
+            case GLSLUniformUnit::vec4: stream << "vec4 "; break;
+            case GLSLUniformUnit::mat4: stream << "mat4 "; break;
+            case GLSLUniformUnit::sampler2D: stream << "sampler2D "; break;
+        }
+        stream << name << ";" << endl;
+    }
+
+    template<GLSLUniformUnit unit, int count>
+    void vert_text(ostream& stream, Uniform<unit, count> member, string name) {
+        stream << "uniform ";
+        switch (unit) {
+            case GLSLUniformUnit::sampler2D: break;
+            default: stream << "highp ";
+        }
+        switch (unit) {
+            case GLSLUniformUnit::single: stream << "single "; break;
+            case GLSLUniformUnit::vec2: stream << "vec2 "; break;
+            case GLSLUniformUnit::vec3: stream << "vec3 "; break;
+            case GLSLUniformUnit::vec4: stream << "vec4 "; break;
+            case GLSLUniformUnit::mat4: stream << "mat4 "; break;
+            case GLSLUniformUnit::sampler2D: stream << "sampler2D "; break;
+        }
+        cout << name;
+        if (count > 1) {
+            cout << "[" << count << "]";
+        }
+        cout << ";" << endl;
+    }
+
+    template<GLSLUniformUnit unit, int count>
+    struct Bind<Uniform<unit, count>> : public array<vec3, count> {
+    public:
+    };
+
+    template<class... Members>
+    class Shader : public Entity<Members...>{
+    public:
+        Shader(Members... members) : Entity{ members... } {}
+
+        template<class... T>
+        void render(T... binds) {
+            bind(binds...);
+        }
+
+        template<class First, class... Rest>
+        void set_binding(First first, Rest... rest) {
+            set_binding(first);
+            set_binding(rest...);
+        }
+
+        template<class Member>
+        void set_binding(Bind<Member> bind) {
+            std::cout << bind.write;
+        }
+    };
+
+    // 🔍 Output state of tuple
+    template<typename... Ts>
+    std::ostream& operator<<(std::ostream& os, std::tuple<Ts...> const& theTuple)
+    {
+        std::apply
+        (
+            [&os](Ts const&... tupleArgs)
+            {
+                os << '[';
+                std::size_t n{0};
+                ((os << tupleArgs << (++n != sizeof...(Ts) ? ", " : "")), ...);
+                os << ']';
+            }, theTuple
+        );
+        return os;
+    }
+
+
+    // template<class First, class... Rest>
+    // void binds() {
+
+    // }
+
+    // 👨‍🔬
+    void test() {
+        class vert_color : public Attribute<GLSLUnit::vec3, false> {};
+        class vert_position : public Attribute<GLSLUnit::vec2, false> {};
+        class model_view_projection : public Uniform<GLSLUniformUnit::mat4, 1> {};
+
+        const auto shader = Shader{vert_color{}, vert_position{}, model_view_projection()}; //vert_color(), vert_position(), 
+        // cout << shader.components << endl;
+        // 📝 Get all the names from the classes....
+        std::apply([](auto&... args){
+            ((vert_text(cout, args, get_class_name(args))), ...);
+        }, shader.components);
+        cout << endl;
+
+        const auto what = { 1, 2, 3 };
+        // vert_text(std::cout, model_view_projection{}); //, 1, model_view_projection
+        //shader.render(Bind{shader.get<model_view_projection>(), vec3{}});
+    }
+
+}
+// <- 😎
+            
+
 int main()
 {
     hyp::test();
-
-    {
-        using namespace hyp;
-        using namespace glm;
-
-        struct Thing {
-            
-        };
-        struct OtherThing {
-
-        };
-
-        const auto entity = Entity<vec2> {{0, 0}};
-    }
+    ShaderBuilder::test();
 
 	std::cout << "Hey ho! my Worldlings!" << std::endl;
+
+    return 0;
+
 	if (!glfwInit())
 	{
 		// Initialization failed

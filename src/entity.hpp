@@ -46,15 +46,15 @@ namespace hyp {
     template<typename... T>
     class Entity {
     private:
-        std::tuple<T...> data;
     public:
-        explicit Entity(T... args) : data{args...} {}
+        std::tuple<T...> components;
+        explicit Entity(T... args) : components{args...} {}
 
         template<typename Component>
         Component get() {
             constexpr std::size_t index =
                     tuple_element_index_v<Component, std::tuple<T...>>;
-            return std::get<index>(data);
+            return std::get<index>(components);
         }
 
         template<typename... Component>
@@ -66,7 +66,7 @@ namespace hyp {
         void set(Component component) {
             constexpr std::size_t index =
                     tuple_element_index_v<Component, std::tuple<T...>>;
-            std::get<index>(data) = component;
+            std::get<index>(components) = component;
         }
 
         template<typename... Component>
