@@ -150,8 +150,8 @@ public:
 };
 
 /** 😎 Objectives:
- * Take shader settings
- * Use to create shader
+ * ✅ Take shader settings
+ * ✅ Use to create shader
  * Use to create render command
  */
 namespace ShaderBuilder {
@@ -187,11 +187,6 @@ namespace ShaderBuilder {
 
     template<GLSLUniformUnit unit, int count>
     class Uniform {
-
-    };
-
-    template<class T>
-    class Bind {
 
     };
 
@@ -246,11 +241,6 @@ namespace ShaderBuilder {
         cout << ";" << endl;
     }
 
-    template<GLSLUniformUnit unit, int count>
-    struct Bind<Uniform<unit, count>> : public array<vec3, count> {
-    public:
-    };
-
     template<class... Members>
     class Shader : public Entity<Members...>{
     public:
@@ -258,23 +248,18 @@ namespace ShaderBuilder {
 
         template<class... T>
         void render(T... binds) {
-            bind(binds...);
+            [&stream](auto&... args){
+                ((cout << "WOW!" << endl), ...);
+            }(binds...);
         }
 
-        template<class First, class... Rest>
-        void set_binding(First first, Rest... rest) {
-            set_binding(first);
-            set_binding(rest...);
-        }
-
-        template<class Member>
-        void set_binding(Bind<Member> bind) {
-            std::cout << bind.write;
-        }
-
-        void to_vert_text() {
-            std::apply([](auto&... args){
-                ((vert_text(cout, args, get_class_name(args))), ...);
+        /**
+         * 📝 Write out the GLSL instructions to initialize members of
+         * the shader in the vertex shader
+         */
+        void to_vert_text(ostream& stream) {
+            std::apply([&stream](auto&... args){
+                ((vert_text(stream, args, get_class_name(args))), ...);
             }, components);
         }
     };
@@ -286,12 +271,22 @@ namespace ShaderBuilder {
         class model_view_projection : public Uniform<GLSLUniformUnit::mat4, 1> {};
 
         auto shader = Shader{vert_color{}, vert_position{}, model_view_projection()};
-        shader.to_vert_text();
-        // 📝 Get all the names from the classes....
+        shader.to_vert_text(cout);
 
-        const auto what = { 1, 2, 3 };
-        // vert_text(std::cout, model_view_projection{}); //, 1, model_view_projection
-        //shader.render(Bind{shader.get<model_view_projection>(), vec3{}});
+        const auto make_from = make_tuple<vector<vec2>,  vector<vec3>, mat4>(
+            {
+                { -0.6f, -0.4f },
+                {  0.6f, -0.4f },
+                {   0.f,  0.6f },
+            },
+            {
+                {1.f, 1.f, 0.f},
+                {0.f, 1.f, 1.f},
+                {1.f, 0.f, 1.f},
+            },
+            {}
+        );
+        // shader.render(lister);
     }
 
     // 🔍 Output state of tuple
