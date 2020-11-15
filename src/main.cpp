@@ -10,6 +10,8 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/type_ptr.inl>
 
+#include "entity.hpp"
+
 class ShaderProgram {
 public:
 	const GLuint program;
@@ -149,6 +151,22 @@ public:
 
 int main()
 {
+    hyp::test();
+
+    {
+        using namespace hyp;
+        using namespace glm;
+
+        struct Thing {
+            
+        };
+        struct OtherThing {
+
+        };
+
+        const auto entity = Entity<vec2> {{0, 0}};
+    }
+
 	std::cout << "Hey ho! my Worldlings!" << std::endl;
 	if (!glfwInit())
 	{

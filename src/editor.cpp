@@ -6,7 +6,7 @@
 #include <GLFW/glfw3.h>
 
 #include "world.hyper"
-#include "nicemath.h"
+#include "entity.hpp"
 
 using namespace std;
 
@@ -160,35 +160,12 @@ struct ShaderOutput {
 	T output_type;
 };
 
-// Tupler! Important for having a structure of arbitrary numbers of members
-
-template<typename T>
-tuple<T> tupler(T v) {
-  return make_tuple(v);
-}
-
-template<typename T, typename... Args>
-tuple<T, Args...> tupler(T first, Args... args) {
-  return tuple_cat(tupler(first), tupler(args...));
-}
-
-// Tupler transformation example
-
-template<typename T>
-tuple<T> unwrap(Typed<T> v) {
-  return make_tuple(v.value);
-}
-
-template<typename T, typename... Args>
-tuple<T, Args...> unwrap(Typed<T> first, Typed<Args>... args) {
-  return tuple_cat(unwrap(first), unwrap(args...));
-}
 
 // Test!
 
 int main()
 {
-
+	hyp::test();
 
 	cout << "Hello Worldlings!" << endl;
 	const auto thingie { tuple_cat(make_tuple(1), make_tuple(2)) };

@@ -15,7 +15,9 @@
         "xhash": "cpp",
         "xtree": "cpp",
         "chrono": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "istream": "cpp",
+        "type_traits": "cpp"
     },
     "cmake.configureSettings": {
         "CMAKE_TOOLCHAIN_FILE": "./vcpkg.cmake",

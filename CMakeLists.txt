@@ -15,7 +15,6 @@ find_package(glm CONFIG REQUIRED)
 
 add_executable(HyperChillGame "src/main.cpp")
 add_executable(ReactiveTester "src/reactive_tester.cpp")
-add_executable(EntityTester "src/entity.cpp")
 
 target_link_libraries(HyperChillGame glad::glad)
 target_link_libraries(HyperChillGame OpenGL::GL)
@@ -28,4 +27,8 @@ target_link_libraries(ReactiveTester glfw)
 target_link_libraries(ReactiveTester rxcpp)
 target_link_libraries(ReactiveTester glm)
 
-target_link_libraries(EntityTester glm)
+# add_executable(HyperChillEditor "src/editor.cpp")
+# target_link_libraries(HyperChillEditor glad::glad)
+# target_link_libraries(HyperChillEditor OpenGL::GL)
+# target_link_libraries(HyperChillEditor glfw)
+# target_link_libraries(HyperChillEditor glm)
