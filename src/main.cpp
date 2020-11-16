@@ -85,8 +85,8 @@ template<class T>
 class Uniform {
 public:
     const GLint location;
-    Uniform(ShaderProgram& program, std::string name) :
-        location{glGetUniformLocation((GLuint)program, name.data()) }
+    Uniform(GLuint program, std::string name) :
+        location{glGetUniformLocation(program, name.data()) }
         { }
     void assign(T value) const {
         static_assert(sizeof(T) == 0, "Only specializations of assign can be used");
@@ -141,8 +141,8 @@ public:
 
         )glsl",
     },
-    model_view_projection{ *this, "model_view_projection" },
-    extra_data{ *this, "extra_data" }
+    model_view_projection{ program, "model_view_projection" },
+    extra_data{ program, "extra_data" }
     {
         assign_buffer_from_vector("vert_color", std::move(vertex_colors));
         assign_buffer_from_vector("vert_position", std::move(vertex_positions));
@@ -167,6 +167,7 @@ namespace ShaderBuilder {
         vec2,
         vec3,
         vec4,
+        mat4,
     };
     enum class GLSLUniformUnit {
         single,
@@ -187,7 +188,6 @@ namespace ShaderBuilder {
 
     template<GLSLUniformUnit unit, int count>
     class Uniform {
-
     };
 
     // ⚠ MSVC specific class name gathering solution
@@ -209,12 +209,11 @@ namespace ShaderBuilder {
     void vert_text(ostream& stream, Attribute<unit, instanced> member, string name) {
         stream << "attribute ";
         switch (unit) {
-            case GLSLUniformUnit::single: stream << "single "; break;
-            case GLSLUniformUnit::vec2: stream << "vec2 "; break;
-            case GLSLUniformUnit::vec3: stream << "vec3 "; break;
-            case GLSLUniformUnit::vec4: stream << "vec4 "; break;
-            case GLSLUniformUnit::mat4: stream << "mat4 "; break;
-            case GLSLUniformUnit::sampler2D: stream << "sampler2D "; break;
+            case GLSLUnit::single: stream << "single "; break;
+            case GLSLUnit::vec2: stream << "vec2 "; break;
+            case GLSLUnit::vec3: stream << "vec3 "; break;
+            case GLSLUnit::vec4: stream << "vec4 "; break;
+            case GLSLUnit::mat4: stream << "mat4 "; break;
         }
         stream << name << ";" << endl;
     }
@@ -244,13 +243,29 @@ namespace ShaderBuilder {
     template<class... Members>
     class Shader : public Entity<Members...>{
     public:
-        Shader(Members... members) : Entity{ members... } {}
+        GLuint program;
+        explicit Shader(Members... members) : Entity{ members... } {}
 
-        template<class... T>
-        void render(T... binds) {
-            [&stream](auto&... args){
-                ((cout << "WOW!" << endl), ...);
-            }(binds...);
+//        template<int count>
+//        void bind(Uniform<GLSLUniformUnit::single, count> member, const string& name, const float& uniform) {
+//            const auto location = glGetUniformLocation(program, name.data());
+//            glUniform1fv(location, 1, &uniform);
+//        }
+        #define DEFINE_BIND(unit, value_unit, gl_call, retrieval) \
+        template<int count> \
+        void bind(Uniform<GLSLUniformUnit::unit, count> member, const string& name, const value_unit& uniform) { \
+            const auto location = glGetUniformLocation(program, name.data()); \
+            gl_call(location, count, retrieval(uniform)); \
+        }
+        DEFINE_BIND(single, float, glUniform1fv, &)
+        DEFINE_BIND(vec2, vec2, glUniform2fv, value_ptr)
+        DEFINE_BIND(vec3, vec3, glUniform3fv, value_ptr)
+        DEFINE_BIND(vec4, vec4, glUniform4fv, value_ptr)
+        DEFINE_BIND(mat4, mat4, glUniformMatrix4fv, value_ptr)
+
+        template<GLSLUnit unit, bool instanced>
+        void bind(Attribute<unit, instanced> member, string name) {
+
         }
 
         /**
@@ -260,9 +275,10 @@ namespace ShaderBuilder {
         void to_vert_text(ostream& stream) {
             std::apply([&stream](auto&... args){
                 ((vert_text(stream, args, get_class_name(args))), ...);
-            }, components);
+            }, this->components);
         }
     };
+
 
     // 👨‍🔬
     void test() {
@@ -273,7 +289,7 @@ namespace ShaderBuilder {
         auto shader = Shader{vert_color{}, vert_position{}, model_view_projection()};
         shader.to_vert_text(cout);
 
-        const auto make_from = make_tuple<vector<vec2>,  vector<vec3>, mat4>(
+        const auto make_from = make_tuple<vector<vec2>, vector<vec3>, mat4>(
             {
                 { -0.6f, -0.4f },
                 {  0.6f, -0.4f },

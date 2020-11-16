@@ -10,7 +10,7 @@
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
-      "cmakeToolchain": "./vcpkg.cmake",
+      "cmakeToolchain": "./tools/vcpkg.cmake",
       "variables": []
     },
     {
@@ -23,7 +23,8 @@
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "msvc_x86" ],
-      "variables": []
+      "variables": [],
+      "cmakeToolchain": "./tools/vcpkg.cmake"
     }
   ]
 }
