@@ -74,6 +74,7 @@
         "xtr1common": "cpp"
     },
     "cmake.configureSettings": {
-        "CMAKE_TOOLCHAIN_FILE": "./tools/vcpkg.cmake",
+        //"CMAKE_TOOLCHAIN_FILE": "D:/programs/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_TOOLCHAIN_FILE": "C:/Program Files/vcpkg/scripts/buildsystems/vcpkg.cmake",
     }
 }
