@@ -403,7 +403,6 @@ namespace ShaderBuilder {
 
             )glsl",
             R"glsl(
-
                 varying vec3 frag_color;
 
                 void main()
@@ -419,7 +418,7 @@ namespace ShaderBuilder {
         {
             glUseProgram(shader.program);
 
-            shader.bind(model_view_projection{}, "model_view_projection", mat4{});
+            shader.bind(model_view_projection{}, "model_view_projection", mat4{ 1.0f });
 
             shader.bind(vert_position{}, "vert_position", {
                 vec2{ -0.6f, -0.4f },
